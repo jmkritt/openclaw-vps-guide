@@ -341,29 +341,114 @@ Send a message to your bot. OpenClaw should respond.
 
 ---
 
-## Part 10: Skill Security Scanning
+## Part 10: Docker Installation (Optional)
+
+Docker enables containerized deployments and is useful for running additional services alongside OpenClaw.
+
+### 10.1 Install Docker
+
+```bash
+# Add Docker's official GPG key
+sudo apt update
+sudo apt install ca-certificates curl gnupg -y
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+```
+
+### 10.2 Run Docker Without Sudo
+
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Apply changes (log out and back in, or run:)
+newgrp docker
+```
+
+### 10.3 Verify Installation
+
+```bash
+docker --version
+docker run hello-world
+```
+
+### 10.4 Docker Security Best Practices
+
+```bash
+# Don't run containers as root
+docker run --user 1000:1000 myimage
+
+# Limit container resources
+docker run --memory="512m" --cpus="1.0" myimage
+
+# Use read-only filesystem where possible
+docker run --read-only myimage
+
+# Don't expose ports publicly (use Tailscale)
+docker run -p 127.0.0.1:8080:8080 myimage
+```
+
+### 10.5 Docker Compose (Optional)
+
+Docker Compose is included with modern Docker. Verify:
+```bash
+docker compose version
+```
+
+Example `docker-compose.yml` for additional services:
+```yaml
+version: '3.8'
+services:
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+```
+
+> 💡 Bind to `127.0.0.1` instead of `0.0.0.0` to keep services local. Access them via Tailscale.
+
+---
+
+## Part 11: Skill Security Scanning
 
 Before installing any third-party skills, scan them for security threats using Cisco's Skill Scanner.
 
-### 10.1 Install Skill Scanner
+### 11.1 Install Skill Scanner
 
 ```bash
 pip3 install cisco-ai-skill-scanner
 ```
 
-### 10.2 Scan a Skill Before Installing
+### 11.2 Scan a Skill Before Installing
 
 ```bash
 skill-scanner scan /path/to/skill
 ```
 
-### 10.3 Full Scan with All Engines
+### 11.3 Full Scan with All Engines
 
 ```bash
 skill-scanner scan /path/to/skill --use-behavioral --use-llm
 ```
 
-### 10.4 Understanding Results
+### 11.4 Understanding Results
 
 The scanner checks for:
 - **Prompt injection** — Instructions that hijack the agent
@@ -377,13 +462,13 @@ Severity levels:
 - 🟡 **Medium** — Review before installing
 - 🟢 **Low/Info** — Generally safe
 
-### 10.5 Scan Multiple Skills
+### 11.5 Scan Multiple Skills
 
 ```bash
 skill-scanner scan-all /path/to/skills --recursive
 ```
 
-### 10.6 CI/CD Integration
+### 11.6 CI/CD Integration
 
 For automated scanning in pipelines:
 ```bash
@@ -410,6 +495,8 @@ More info: https://github.com/cisco-ai-defense/skill-scanner
 - [ ] Unattended security updates enabled
 - [ ] Fail2Ban installed (optional)
 - [ ] Backup strategy in place
+- [ ] Docker installed (optional)
+- [ ] User added to docker group (no sudo needed)
 - [ ] Cisco Skill Scanner installed
 - [ ] All third-party skills scanned before installation
 

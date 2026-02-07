@@ -11,6 +11,7 @@ A comprehensive guide for setting up [OpenClaw](https://openclaw.ai) on a VPS wi
 - ✅ Node.js & OpenClaw installation
 - ✅ Secure credential management
 - ✅ Systemd service setup
+- ✅ Docker installation & security
 - ✅ Skill security scanning (Cisco)
 - ✅ Automatic updates & backups
 - ✅ Complete security checklist
